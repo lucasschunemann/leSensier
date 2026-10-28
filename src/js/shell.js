@@ -5,6 +5,8 @@ import Lenis from 'lenis';
 import wordmark from '../assets/wordmark-currentColor.svg?raw';
 import { bag, brl, formatOf } from './store.js';
 import { bottle } from './bottle.js';
+import { fragrances, sets } from './catalog.js';
+import { families, familyOrder } from './families.js';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -12,22 +14,41 @@ export const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 export const fine = window.matchMedia('(pointer: fine)').matches;
 export let lenis = null;
 
-const NAV = [
-  ['Coleção', '/colecao.html'],
-  ['Kits', '/colecao.html?f=kits'],
-  ['Famílias', '/#familias'],
-  ['A marca', '/marca.html'],
-];
+const count = (fn) => fragrances.filter(fn).length;
 
-function header(dark) {
+function header() {
   const el = document.createElement('header');
-  el.className = 'hd' + (dark ? ' hd--dark' : '');
+  el.className = 'hd';
   el.innerHTML = `
-    <a class="hd__logo" href="/" aria-label="Le Sensier, início">${wordmark}</a>
     <nav class="hd__nav" aria-label="Principal">
-      ${NAV.map(([t, h]) => `<a href="${h}">${t}</a>`).join('')}
+      <div class="hd__item">
+        <a href="/colecao.html" class="hd__link" aria-haspopup="true" aria-expanded="false" data-mega-trigger>Perfumes</a>
+        <div class="mega" data-mega>
+          <div class="mega__in">
+            <div class="mega__col">
+              <p class="mega__h">Ver</p>
+              <a href="/colecao.html">Todos os perfumes <span>${fragrances.length}</span></a>
+              <a href="/colecao.html?f=autoral">Autorais <span>${count((f) => f.line === 'autoral')}</span></a>
+              <a href="/colecao.html?f=releitura">Releituras <span>${count((f) => f.line === 'releitura')}</span></a>
+              <a href="/colecao.html?f=colonias">Colônias 200 ml <span>${count((f) => f.sizes.some((s) => /200/.test(s.label)))}</span></a>
+            </div>
+            <div class="mega__col mega__col--fam">
+              <p class="mega__h">Famílias</p>
+              ${familyOrder.filter((k) => k !== 'the').map((k) => `<a href="/colecao.html?f=${k}" data-fam="${k}">${families[k].name} <span>${count((f) => f.family === k)}</span></a>`).join('')}
+            </div>
+            <div class="mega__pic" aria-hidden="true">${bottle({ family: 'linge', name: 'Linge Lave', shadow: false })}</div>
+          </div>
+        </div>
+      </div>
+      <a href="/colecao.html?f=kits" class="hd__link">Kits</a>
+      <a href="/colecao.html?f=corpo" class="hd__link">Corpo</a>
+      <a href="/marca.html" class="hd__link">A marca</a>
     </nav>
-    <button class="hd__bag" type="button" data-bag-open>Sacola <span data-bag-count>0</span></button>
+    <a class="hd__logo" href="/" aria-label="Le Sensier, início">${wordmark}</a>
+    <div class="hd__tools">
+      <button type="button" class="hd__link" data-search-open>Buscar</button>
+      <button type="button" class="hd__link" data-bag-open>Sacola (<span data-bag-count>0</span>)</button>
+    </div>
     <button class="hd__menu" type="button" aria-expanded="false" aria-controls="menu">Menu</button>`;
   return el;
 }
@@ -37,15 +58,109 @@ function menu() {
   el.className = 'menu';
   el.id = 'menu';
   el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = `<nav>${NAV.map(([t, h]) => `<a href="${h}"><span>${t}</span></a>`).join('')}</nav>`;
+  el.innerHTML = `<nav>
+    <a href="/colecao.html">Todos os perfumes</a>
+    <a href="/colecao.html?f=autoral">Autorais</a>
+    <a href="/colecao.html?f=releitura">Releituras</a>
+    <a href="/colecao.html?f=kits">Kits</a>
+    <a href="/colecao.html?f=corpo">Corpo</a>
+    <p class="menu__h">Famílias</p>
+    <div class="menu__fams">${familyOrder.filter((k) => k !== 'the').map((k) => `<a href="/colecao.html?f=${k}">${families[k].name}</a>`).join('')}</div>
+    <a href="/marca.html" class="menu__small">A marca</a>
+  </nav>`;
   return el;
+}
+
+function searchPanel() {
+  const el = document.createElement('div');
+  el.className = 'search';
+  el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = `
+    <div class="search__veil" data-search-close></div>
+    <div class="search__panel" role="dialog" aria-modal="true" aria-label="Buscar">
+      <form class="search__form" role="search" onsubmit="return false">
+        <input type="search" placeholder="Buscar por nome, nota ou família" aria-label="Buscar" autocomplete="off" />
+        <button type="button" data-search-close>Fechar</button>
+      </form>
+      <ul class="search__results" aria-live="polite"></ul>
+    </div>`;
+  return el;
+}
+
+const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+export function matches(p, q) {
+  const text = norm([p.name, p.category, p.short, p.desc, families[p.family]?.name, p.line, ...(p.notes ? [...p.notes.top, ...p.notes.heart, ...p.notes.base] : []), ...(p.contents || [])]
+    .filter(Boolean).join(' '));
+  return norm(q).split(/\s+/).filter(Boolean).every((w) => text.includes(w));
+}
+
+function wireSearch() {
+  const el = document.querySelector('.search');
+  const input = el.querySelector('input');
+  const list = el.querySelector('.search__results');
+  const all = [...fragrances, ...sets];
+  const render = () => {
+    const q = input.value.trim();
+    const hits = q ? all.filter((p) => matches(p, q)).slice(0, 12) : fragrances.slice(0, 6);
+    list.innerHTML = (q ? '' : '<li class="search__hint">Sugestões</li>') + (hits.length ? hits.map((p) => `
+      <li><a href="/produto.html?p=${p.slug}">
+        <span class="search__thumb">${bottle({ family: p.family || 'brume', line: p.line || 'autoral', format: p.kind === 'corpo' ? 'jar' : p.kind === 'kit' ? '5' : '50', label: false, shadow: false })}</span>
+        <span class="search__name">${p.name}</span>
+        <span class="search__meta">${p.notes ? p.category : p.kind === 'corpo' ? 'Corpo' : 'Kit'}</span>
+        <span class="search__price">${brl(p.sizes[0].price)}</span>
+      </a></li>`).join('') : `<li class="search__hint">Nada encontrado para "${q.replace(/</g, '')}".</li>`);
+  };
+  input.addEventListener('input', render);
+  const open = () => {
+    render();
+    document.documentElement.classList.add('search-open');
+    el.setAttribute('aria-hidden', 'false');
+    lenis?.stop();
+    setTimeout(() => input.focus(), 50);
+  };
+  const close = () => {
+    document.documentElement.classList.remove('search-open');
+    el.setAttribute('aria-hidden', 'true');
+    lenis?.start();
+  };
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-search-open]')) open();
+    if (e.target.closest('[data-search-close]')) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key === '/' && !/input|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); open(); }
+  });
+}
+
+function wireMega() {
+  const item = document.querySelector('.hd__item');
+  const trigger = item.querySelector('[data-mega-trigger]');
+  const pic = item.querySelector('.mega__pic');
+  let t;
+  const set = (open) => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      document.documentElement.classList.toggle('mega-open', open);
+      trigger.setAttribute('aria-expanded', String(open));
+    }, open ? 60 : 140);
+  };
+  item.addEventListener('pointerenter', () => set(true));
+  item.addEventListener('pointerleave', () => set(false));
+  item.addEventListener('focusin', () => set(true));
+  item.addEventListener('focusout', (e) => { if (!item.contains(e.relatedTarget)) set(false); });
+  item.querySelectorAll('[data-fam]').forEach((a) => a.addEventListener('pointerenter', () => {
+    const k = a.dataset.fam;
+    const f = fragrances.find((x) => x.family === k);
+    pic.innerHTML = bottle({ family: k, line: f.line, name: f.name, shadow: false });
+  }));
 }
 
 function drawer() {
   const el = document.createElement('aside');
   el.className = 'bag';
   el.setAttribute('aria-hidden', 'true');
-  el.setAttribute('aria-label', 'Sacola');
   el.innerHTML = `
     <div class="bag__veil" data-bag-close></div>
     <div class="bag__panel" role="dialog" aria-modal="true" aria-labelledby="bag-title">
@@ -53,7 +168,7 @@ function drawer() {
       <ul class="bag__list"></ul>
       <div class="bag__foot">
         <p class="bag__total"><span>Subtotal</span><span data-bag-total></span></p>
-        <p class="bag__note">Frete e pagamento são calculados no checkout.</p>
+        <p class="bag__note">Frete e pagamento no checkout.</p>
         <a class="btn btn--ink bag__go" data-bag-checkout href="#">Finalizar compra</a>
       </div>
     </div>`;
@@ -124,88 +239,40 @@ function wireMenu() {
     m.setAttribute('aria-hidden', String(!open));
     if (open) {
       lenis?.stop();
-      gsap.fromTo(m.querySelectorAll('span'), { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'expo.out', stagger: 0.06 });
+      if (!reduced) gsap.fromTo(m.querySelectorAll('nav > *'), { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6, ease: 'expo.out', stagger: 0.03 });
     } else lenis?.start();
   });
 }
 
-// Transição entre páginas: cortina sobe ao sair, desce ao entrar.
+// Transição curta entre páginas: o conteúdo esmaece ao sair e sobe ao entrar.
 function wireTransitions() {
-  const curtain = document.createElement('div');
-  curtain.className = 'curtain';
-  curtain.innerHTML = `<div class="curtain__mark">${wordmark}</div>`;
-  document.body.appendChild(curtain);
-
-  const entering = sessionStorage.getItem('ls-nav') === '1';
-  sessionStorage.removeItem('ls-nav');
-  if (entering && !reduced) {
-    gsap.set(curtain, { yPercent: 0 });
-    gsap.to(curtain, { yPercent: -100, duration: 1.1, ease: 'expo.inOut', delay: 0.1 });
-  } else gsap.set(curtain, { yPercent: 100 });
-
+  const main = document.querySelector('main');
+  if (!reduced) gsap.from(main, { autoAlpha: 0, y: 14, duration: 0.7, ease: 'expo.out', clearProps: 'all' });
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href]');
-    if (!a || reduced || e.metaKey || e.ctrlKey || a.target === '_blank') return;
+    if (!a || reduced || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank' || a.hasAttribute('download')) return;
     const url = new URL(a.href, location.href);
     if (url.origin !== location.origin) return;
     if (url.pathname === location.pathname && url.hash) {
       const t = document.querySelector(url.hash);
-      if (t) { e.preventDefault(); closeMenuIfOpen(); lenis ? lenis.scrollTo(t, { duration: 1.6 }) : t.scrollIntoView(); }
+      if (t) { e.preventDefault(); lenis ? lenis.scrollTo(t, { offset: -70, duration: 1.2 }) : t.scrollIntoView(); }
       return;
     }
     if (url.href === location.href) return;
     e.preventDefault();
-    sessionStorage.setItem('ls-nav', '1');
-    gsap.fromTo(curtain, { yPercent: 100 }, { yPercent: 0, duration: 0.8, ease: 'expo.inOut', onComplete: () => (location.href = url.href) });
+    gsap.to(main, { autoAlpha: 0, y: -8, duration: 0.22, ease: 'power2.in', onComplete: () => (location.href = url.href) });
   });
-  window.addEventListener('pageshow', (e) => { if (e.persisted) gsap.set(curtain, { yPercent: 100 }); });
+  window.addEventListener('pageshow', (e) => { if (e.persisted) gsap.set(main, { clearProps: 'all' }); });
 }
 
-function closeMenuIfOpen() {
-  if (document.documentElement.classList.contains('menu-open')) document.querySelector('.hd__menu').click();
-}
-
-function wireCursor() {
-  if (!fine || reduced) return;
-  const c = document.createElement('div');
-  c.className = 'cursor';
-  c.innerHTML = '<span class="cursor__label"></span>';
-  document.body.appendChild(c);
-  const label = c.firstChild;
-  const xTo = gsap.quickTo(c, 'x', { duration: 0.35, ease: 'power3' });
-  const yTo = gsap.quickTo(c, 'y', { duration: 0.35, ease: 'power3' });
-  window.addEventListener('pointermove', (e) => { xTo(e.clientX); yTo(e.clientY); c.classList.add('is-on'); });
-  document.addEventListener('pointerover', (e) => {
-    const t = e.target.closest('[data-cursor]');
-    const link = e.target.closest('a, button, [role="button"], input, label');
-    c.classList.toggle('is-label', !!t);
-    c.classList.toggle('is-link', !t && !!link);
-    label.textContent = t ? t.dataset.cursor : '';
-  });
-  document.addEventListener('pointerleave', () => c.classList.remove('is-on'));
-}
-
-// Revelações reutilizáveis
 export function reveals(root = document) {
   if (reduced) return;
   root.querySelectorAll('[data-split]').forEach((el) => {
-    const split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'ln' });
-    gsap.from(split.lines, {
-      yPercent: 105, duration: 1.2, ease: 'expo.out', stagger: 0.08,
-      scrollTrigger: { trigger: el, start: 'top 88%' },
-    });
+    const split = SplitText.create(el, { type: 'lines', mask: 'lines' });
+    gsap.from(split.lines, { yPercent: 105, duration: 1.1, ease: 'expo.out', stagger: 0.07, scrollTrigger: { trigger: el, start: 'top 92%' } });
   });
   root.querySelectorAll('[data-reveal]').forEach((el) => {
-    gsap.from(el, {
-      y: 40, autoAlpha: 0, duration: 1.2, ease: 'expo.out', delay: Number(el.dataset.reveal) || 0,
-      scrollTrigger: { trigger: el, start: 'top 90%' },
-    });
-  });
-  root.querySelectorAll('[data-stagger]').forEach((el) => {
-    gsap.from(el.children, {
-      y: 60, autoAlpha: 0, duration: 1.1, ease: 'expo.out', stagger: 0.07,
-      scrollTrigger: { trigger: el, start: 'top 85%' },
-    });
+    gsap.from(el, { y: 24, autoAlpha: 0, duration: 1, ease: 'expo.out', delay: Number(el.dataset.reveal) || 0, scrollTrigger: { trigger: el, start: 'top 94%' } });
   });
 }
 
@@ -213,49 +280,37 @@ function footer() {
   const el = document.createElement('footer');
   el.className = 'ft';
   el.innerHTML = `
-    <div class="ft__top">
-      <p class="ft__line">Perfumaria brasileira. Criações autorais e releituras.</p>
-      <nav class="ft__nav" aria-label="Rodapé">
-        <div><h3>Loja</h3><a href="/colecao.html">Coleção</a><a href="/colecao.html?f=autoral">Autorais</a><a href="/colecao.html?f=releitura">Releituras</a><a href="/colecao.html?f=kits">Kits</a><a href="/colecao.html?f=corpo">Corpo</a></div>
-        <div><h3>Casa</h3><a href="/#familias">Famílias</a><a href="/marca.html">A marca</a><a href="https://lesensier.com.br/pages/trocas-e-devolucoes">Trocas e devoluções</a></div>
-      </nav>
-    </div>
+    <nav class="ft__nav" aria-label="Rodapé">
+      <div><h3>Perfumes</h3><a href="/colecao.html">Todos</a><a href="/colecao.html?f=autoral">Autorais</a><a href="/colecao.html?f=releitura">Releituras</a><a href="/colecao.html?f=colonias">Colônias</a></div>
+      <div><h3>Famílias</h3>${familyOrder.filter((k) => k !== 'the').map((k) => `<a href="/colecao.html?f=${k}">${families[k].name}</a>`).join('')}</div>
+      <div><h3>Loja</h3><a href="/colecao.html?f=kits">Kits</a><a href="/colecao.html?f=corpo">Corpo</a><a href="https://lesensier.com.br/pages/trocas-e-devolucoes">Trocas e devoluções</a></div>
+      <div><h3>Casa</h3><a href="/marca.html">A marca</a></div>
+    </nav>
     <a class="ft__mark" href="/" aria-label="Le Sensier">${wordmark}</a>
-    <p class="ft__small">© ${new Date().getFullYear()} Le Sensier</p>`;
+    <p class="ft__small"><span>© ${new Date().getFullYear()} Le Sensier</span><span>Perfumaria brasileira</span></p>`;
   return el;
 }
 
-export function boot({ dark = false } = {}) {
+export function boot() {
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   if (!location.hash) window.scrollTo(0, 0);
-  document.body.prepend(header(dark));
-  document.body.append(menu(), drawer());
-  document.body.append(footer());
+  document.body.prepend(header());
+  document.body.append(menu(), searchPanel(), drawer(), footer());
   wireBag();
   wireMenu();
+  wireMega();
+  wireSearch();
   wireTransitions();
-  wireCursor();
 
   if (!reduced) {
-    lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9 });
+    lenis = new Lenis({ lerp: 0.12 });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
   }
 
-  // Cabeçalho some ao rolar para baixo, volta ao subir
   const hd = document.querySelector('.hd');
-  let last = 0;
-  ScrollTrigger.create({
-    start: 0, end: 'max',
-    onUpdate: (s) => {
-      const y = s.scroll();
-      hd.classList.toggle('is-hidden', y > 200 && y > last && !document.documentElement.classList.contains('menu-open'));
-      hd.classList.toggle('is-scrolled', y > 40);
-      last = y;
-    },
-  });
-
+  ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (s) => hd.classList.toggle('is-scrolled', s.scroll() > 8) });
   document.fonts?.ready.then(() => ScrollTrigger.refresh());
 }
 

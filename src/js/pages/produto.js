@@ -1,4 +1,5 @@
 import { boot, reveals, reduced, fine, gsap, openBag } from '../shell.js';
+import { wireQuickAdd } from '../cards.js';
 import { fragrances, sets } from '../catalog.js';
 import { families } from '../families.js';
 import { bottle } from '../bottle.js';
@@ -43,7 +44,6 @@ let size = p.sizes.find((s) => s.label === pre) || p.sizes[0];
 const el = document.querySelector('[data-pdp]');
 el.innerHTML = `
   <div class="pdp__media">
-    <span class="pdp__word" aria-hidden="true">${fam.name}</span>
     <div class="pdp__bottle">${media(size)}</div>
   </div>
   <div class="pdp__info">
@@ -52,8 +52,8 @@ el.innerHTML = `
       ${isSet ? `<a href="/colecao.html?f=${p.kind === 'corpo' ? 'corpo' : 'kits'}">${p.kind === 'corpo' ? 'Corpo' : 'Kits'}</a>` : `<a href="/colecao.html?f=${p.family}">${fam.name}</a>`}
     </nav>
     <header style="display:grid;gap:14px">
-      ${isSet ? '' : `<p class="label">${p.line === 'autoral' ? 'Autoral' : 'Releitura'}${p.bestseller ? ' · Mais vendido da casa' : ''}</p>`}
-      <h1 class="pdp__title" data-split>${p.name}</h1>
+      ${isSet ? '' : `<p class="label">${fam.name} · ${p.line === 'autoral' ? 'Autoral' : 'Releitura'}${p.bestseller ? ' · Mais vendido' : ''}</p>`}
+      <h1 class="pdp__title">${p.name}</h1>
       ${isSet ? '' : `<p class="pdp__cat">${p.category}</p>`}
     </header>
     <p class="pdp__short" data-reveal>${isSet ? p.desc : p.short}</p>
@@ -126,7 +126,6 @@ addBtn.addEventListener('click', () => {
 // Frasco reage ao ponteiro e à rolagem
 if (!reduced) {
   gsap.from(bottleEl, { y: 80, autoAlpha: 0, scale: 0.96, duration: 1.6, ease: 'expo.out', delay: 0.3 });
-  gsap.from('.pdp__word', { xPercent: 12, autoAlpha: 0, duration: 2, ease: 'expo.out' });
   if (fine) {
     const box = el.querySelector('.pdp__media');
     const rx = gsap.quickTo(bottleEl, 'rotationY', { duration: 0.8, ease: 'power3' });
@@ -139,7 +138,6 @@ if (!reduced) {
     });
     box.addEventListener('pointerleave', () => { rx(0); ry(0); });
   }
-  gsap.to('.pdp__word', { xPercent: -14, ease: 'none', scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true } });
   gsap.from('.intensity__bar i.on', { scaleX: 0, duration: 0.8, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '.intensity', start: 'top 90%' } });
   gsap.from('.notes__row', { y: 24, autoAlpha: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: '.notes', start: 'top 90%' } });
 }
@@ -153,7 +151,7 @@ if (same.length) {
   rel.hidden = false;
   rel.querySelector('h2').textContent = isSet ? (p.kind === 'corpo' ? 'Mais para o corpo' : 'Outros kits') : `Mais ${fam.name}`;
   rel.querySelector('.grid').innerHTML = same.join('');
-  rel.querySelector('.grid').setAttribute('data-stagger', '');
+  wireQuickAdd();
 }
 
 reveals();

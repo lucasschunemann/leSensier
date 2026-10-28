@@ -2,24 +2,16 @@ import { families, caps } from './families.js';
 
 let uid = 0;
 
-function lum(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
 export function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   const f = (c) => Math.max(0, Math.min(255, Math.round(c + amt * 255)));
-  const r = f(n >> 16), g = f((n >> 8) & 255), b = f(n & 255);
-  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+  return '#' + ((1 << 24) | (f(n >> 16) << 16) | (f((n >> 8) & 255) << 8) | f(n & 255)).toString(16).slice(1);
 }
 
-function wrap(name, max = 15) {
-  const words = name.split(' ');
+function wrap(name, max) {
   const lines = [];
   let cur = '';
-  for (const w of words) {
+  for (const w of name.split(' ')) {
     if ((cur + ' ' + w).trim().length > max && cur) { lines.push(cur); cur = w; }
     else cur = (cur + ' ' + w).trim();
   }
@@ -28,131 +20,103 @@ function wrap(name, max = 15) {
 }
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const SANS = 'Geist, Helvetica, Arial, sans-serif';
+const MONO = "'Geist Mono', ui-monospace, monospace";
 
-function defs(id, tint, cap) {
+/** Etiqueta de papel colada no vidro, texto alinhado à esquerda. */
+function label({ x, y, w, h, name, size, kind = 'PARFUM' }) {
+  const fs = Math.max(4.6, Math.min(8.2, w / 10.5));
+  const lines = wrap(name.toUpperCase(), Math.floor(w / (fs * 0.66)));
+  const px = x + w * 0.09;
+  const meta = fs * 0.56;
   return `
-  <defs>
-    <linearGradient id="cap${id}" x1="0" x2="1">
-      <stop offset="0" stop-color="${cap.low}"/><stop offset=".32" stop-color="${cap.top}"/>
-      <stop offset=".6" stop-color="${cap.mid}"/><stop offset="1" stop-color="${cap.low}"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#F8F7F3"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#111" stroke-opacity=".06"/>
+    <g fill="#111" font-family="${SANS}">
+      <text x="${px}" y="${y + h * 0.2}" font-family="${MONO}" font-size="${meta}" letter-spacing=".4">LE SENSIER</text>
+      ${lines.map((l, i) => `<text x="${px}" y="${y + h * 0.43 + i * fs * 1.12}" font-size="${fs}" font-weight="500" letter-spacing=".2">${esc(l)}</text>`).join('')}
+      <text x="${px}" y="${y + h * 0.88}" font-family="${MONO}" font-size="${meta}" letter-spacing=".4">${kind}</text>
+      <text x="${x + w * 0.91}" y="${y + h * 0.88}" font-family="${MONO}" font-size="${meta}" letter-spacing=".4" text-anchor="end">${esc(size)}</text>
+    </g>`;
+}
+
+function glassDefs(id, tint, cap) {
+  return `<defs>
+    <linearGradient id="g${id}" x1="0" x2="1">
+      <stop offset="0" stop-color="#111" stop-opacity=".10"/><stop offset=".07" stop-color="#fff" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".93" stop-color="#fff" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#111" stop-opacity=".12"/>
     </linearGradient>
-    <linearGradient id="collar${id}" x1="0" x2="1">
-      <stop offset="0" stop-color="#9d978b"/><stop offset=".35" stop-color="#e8e4dc"/><stop offset="1" stop-color="#8f897d"/>
+    <linearGradient id="j${id}" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="${shade(tint, 0.03)}" stop-opacity=".85"/><stop offset="1" stop-color="${shade(tint, -0.05)}" stop-opacity=".95"/>
     </linearGradient>
-    <linearGradient id="glass${id}" x1="0" x2="1">
-      <stop offset="0" stop-color="#141311" stop-opacity=".16"/><stop offset=".12" stop-color="#ffffff" stop-opacity=".35"/>
-      <stop offset=".5" stop-color="#ffffff" stop-opacity=".12"/><stop offset=".88" stop-color="#ffffff" stop-opacity=".3"/>
-      <stop offset="1" stop-color="#141311" stop-opacity=".18"/>
+    <linearGradient id="c${id}" x1="0" x2="1">
+      <stop offset="0" stop-color="${cap.low}"/><stop offset=".18" stop-color="${cap.top}"/><stop offset=".75" stop-color="${cap.mid}"/><stop offset="1" stop-color="${cap.low}"/>
     </linearGradient>
-    <linearGradient id="juice${id}" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="${shade(tint, 0.08)}"/><stop offset="1" stop-color="${shade(tint, -0.06)}"/>
-    </linearGradient>
-    <linearGradient id="juiceSide${id}" x1="0" x2="1">
-      <stop offset="0" stop-color="#141311" stop-opacity=".16"/><stop offset=".25" stop-color="#141311" stop-opacity="0"/>
-      <stop offset=".8" stop-color="#ffffff" stop-opacity=".1"/><stop offset="1" stop-color="#141311" stop-opacity=".14"/>
-    </linearGradient>
-    <linearGradient id="base${id}" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity=".5"/><stop offset="1" stop-color="#ffffff" stop-opacity=".15"/>
-    </linearGradient>
-    <radialGradient id="shadow${id}" cx=".5" cy=".5" r=".5">
-      <stop offset="0" stop-color="#141311" stop-opacity=".22"/><stop offset="1" stop-color="#141311" stop-opacity="0"/>
-    </radialGradient>
+    <radialGradient id="s${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#111" stop-opacity=".16"/><stop offset="1" stop-color="#111" stop-opacity="0"/></radialGradient>
   </defs>`;
 }
 
-function printed({ cx, y, name, sizeLabel, ink, scale = 1 }) {
-  const lines = wrap(name, scale < 0.7 ? 11 : 15);
-  const lh = 15 * scale;
-  const startY = y + 26 * scale;
+/** Frasco reto de vidro com tampa em bloco. */
+function flacon({ id, tint, cap, cx, top, bw, bh, cw, ch, r, name, size, labelOn, shadow, kind }) {
+  const bx = cx - bw / 2, by = top + ch + 8;
+  const wall = Math.max(4, bw * 0.06);
+  const base = Math.max(8, bh * 0.08);
+  const fill = by + bh * 0.16;
+  const lw = bw * 0.7, lh = Math.min(bh * 0.42, lw * 0.86);
   return `
-  <g fill="${ink}" text-anchor="middle" class="b-print">
-    <text x="${cx}" y="${y}" font-family="Geist, sans-serif" font-size="${6.4 * scale}" letter-spacing="${2.6 * scale}" opacity=".85">LE SENSIER</text>
-    ${lines.map((l, i) => `<text x="${cx}" y="${startY + i * lh}" font-family="'Bodoni Moda', serif" font-size="${12.5 * scale}">${esc(l)}</text>`).join('')}
-    <text x="${cx}" y="${startY + lines.length * lh + 10 * scale}" font-family="Geist, sans-serif" font-size="${5.6 * scale}" letter-spacing="${1.8 * scale}" opacity=".7">${esc(sizeLabel.toUpperCase())}</text>
-  </g>`;
+    ${shadow ? `<ellipse cx="${cx}" cy="${by + bh + 2}" rx="${bw * 0.62}" ry="5" fill="url(#s${id})"/>` : ''}
+    <rect x="${cx - cw / 2}" y="${top}" width="${cw}" height="${ch}" rx="2" fill="url(#c${id})"/>
+    <rect x="${cx - 7}" y="${top + ch}" width="14" height="8" fill="#cfccc6"/>
+    <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${r}" fill="url(#g${id})" stroke="#111" stroke-opacity=".14"/>
+    <rect x="${bx + wall}" y="${fill}" width="${bw - wall * 2}" height="${by + bh - base - fill}" rx="${r * 0.4}" fill="url(#j${id})"/>
+    <rect x="${bx + wall}" y="${fill}" width="${bw - wall * 2}" height="1.2" fill="#fff" opacity=".7"/>
+    <line x1="${cx}" y1="${by + 2}" x2="${cx}" y2="${by + bh - base - 3}" stroke="#111" stroke-opacity=".12" stroke-width="1.2"/>
+    <rect x="${bx + 3}" y="${by + 4}" width="${Math.max(2, bw * 0.025)}" height="${bh - 10}" rx="1" fill="#fff" opacity=".7"/>
+    <rect x="${bx + 2}" y="${by + bh - base}" width="${bw - 4}" height="${base - 2}" rx="${r * 0.6}" fill="#fff" opacity=".35"/>
+    ${labelOn ? label({ x: cx - lw / 2, y: by + bh * 0.3, w: lw, h: lh, name, size, kind }) : ''}`;
 }
 
 /**
- * Frasco em SVG.
- * format: '50' (flacon), '5' (miniatura), '200' (cologne), 'jar' (polpa)
+ * format: '50' parfum, '5' miniatura, '200' cologne, 'jar' polpa
  */
-export function bottle({ family = 'brume', line = 'autoral', name = '', format = '50', label = true, shadow = true } = {}) {
+export function bottle({ family = 'brume', line = 'autoral', name = '', format = '50', label: labelOn = true, shadow = true } = {}) {
   const id = ++uid;
   const tint = (families[family] || families.brume).tint;
   const cap = caps[line] || caps.autoral;
-  const ink = lum(tint) < 0.5 ? '#F3F0EA' : '#141311';
-  let body = '';
-
+  let body;
   if (format === '5') {
-    body = `
-    ${shadow ? `<ellipse cx="100" cy="286" rx="40" ry="6" fill="url(#shadow${id})"/>` : ''}
-    <rect x="84" y="34" width="32" height="70" rx="2" fill="url(#cap${id})"/>
-    <rect x="89" y="104" width="22" height="6" fill="url(#collar${id})"/>
-    <rect x="74" y="110" width="52" height="172" rx="6" fill="url(#glass${id})" stroke="#141311" stroke-opacity=".16"/>
-    <rect x="80" y="122" width="40" height="138" rx="3" fill="url(#juice${id})"/>
-    <rect x="80" y="122" width="40" height="138" rx="3" fill="url(#juiceSide${id})"/>
-    <rect x="76" y="262" width="48" height="18" rx="4" fill="url(#base${id})"/>
-    <rect x="78" y="116" width="3" height="160" rx="1.5" fill="#fff" opacity=".6"/>
-    ${label ? printed({ cx: 100, y: 150, name, sizeLabel: '5 ml', ink, scale: 0.52 }) : ''}`;
+    body = flacon({ id, tint, cap, cx: 100, top: 122, bw: 70, bh: 120, cw: 46, ch: 30, r: 5, name, size: '5 ML', labelOn, shadow });
   } else if (format === '200') {
-    body = `
-    ${shadow ? `<ellipse cx="100" cy="292" rx="80" ry="7" fill="url(#shadow${id})"/>` : ''}
-    <rect x="74" y="4" width="52" height="58" rx="2" fill="url(#cap${id})"/>
-    <rect x="84" y="62" width="32" height="8" fill="url(#collar${id})"/>
-    <rect x="38" y="70" width="124" height="218" rx="10" fill="url(#glass${id})" stroke="#141311" stroke-opacity=".16"/>
-    <rect x="49" y="84" width="102" height="172" rx="4" fill="url(#juice${id})"/>
-    <rect x="49" y="84" width="102" height="172" rx="4" fill="url(#juiceSide${id})"/>
-    <rect x="42" y="258" width="116" height="26" rx="7" fill="url(#base${id})"/>
-    <rect x="44" y="78" width="5" height="200" rx="2.5" fill="#fff" opacity=".55"/>
-    <rect x="153" y="82" width="1.6" height="190" fill="#fff" opacity=".4"/>
-    ${label ? printed({ cx: 100, y: 128, name, sizeLabel: 'Cologne 200 ml', ink, scale: 0.85 }) : ''}`;
+    body = flacon({ id, tint, cap, cx: 100, top: 22, bw: 124, bh: 214, cw: 72, ch: 40, r: 7, name, size: '200 ML', labelOn, shadow, kind: 'COLOGNE' });
   } else if (format === 'jar') {
+    const cx = 100, top = 150, bw = 150, bh = 104;
     body = `
-    ${shadow ? `<ellipse cx="100" cy="284" rx="86" ry="7" fill="url(#shadow${id})"/>` : ''}
-    <rect x="28" y="132" width="144" height="34" rx="4" fill="url(#cap${id})"/>
-    <rect x="32" y="166" width="136" height="114" rx="16" fill="url(#glass${id})" stroke="#141311" stroke-opacity=".16"/>
-    <rect x="42" y="172" width="116" height="88" rx="10" fill="url(#juice${id})"/>
-    <rect x="42" y="172" width="116" height="88" rx="10" fill="url(#juiceSide${id})"/>
-    <rect x="38" y="170" width="4" height="100" rx="2" fill="#fff" opacity=".55"/>
-    ${label ? printed({ cx: 100, y: 196, name, sizeLabel: 'Polpa', ink, scale: 0.7 }) : ''}`;
+      ${shadow ? `<ellipse cx="${cx}" cy="${top + 34 + bh + 2}" rx="96" ry="6" fill="url(#s${id})"/>` : ''}
+      <rect x="${cx - bw / 2 - 2}" y="${top}" width="${bw + 4}" height="34" rx="3" fill="url(#c${id})"/>
+      <rect x="${cx - bw / 2}" y="${top + 34}" width="${bw}" height="${bh}" rx="10" fill="url(#g${id})" stroke="#111" stroke-opacity=".14"/>
+      <rect x="${cx - bw / 2 + 8}" y="${top + 40}" width="${bw - 16}" height="${bh - 18}" rx="6" fill="url(#j${id})"/>
+      <rect x="${cx - bw / 2 + 3}" y="${top + 38}" width="3" height="${bh - 10}" rx="1" fill="#fff" opacity=".7"/>
+      ${labelOn ? label({ x: cx - 52, y: top + 50, w: 104, h: 62, name, size: '', kind: 'POLPA' }) : ''}`;
   } else {
-    body = `
-    ${shadow ? `<ellipse cx="100" cy="290" rx="92" ry="8" fill="url(#shadow${id})"/>` : ''}
-    <rect x="70" y="16" width="60" height="76" rx="2" fill="url(#cap${id})"/>
-    <rect x="70" y="16" width="60" height="2" fill="#fff" opacity=".25"/>
-    <rect x="82" y="92" width="36" height="8" fill="url(#collar${id})"/>
-    <rect x="24" y="100" width="152" height="186" rx="12" fill="url(#glass${id})" stroke="#141311" stroke-opacity=".16"/>
-    <rect x="38" y="116" width="124" height="136" rx="5" fill="url(#juice${id})"/>
-    <rect x="38" y="116" width="124" height="136" rx="5" fill="url(#juiceSide${id})"/>
-    <rect x="38" y="116" width="124" height="2" fill="#fff" opacity=".35"/>
-    <rect x="28" y="254" width="144" height="28" rx="8" fill="url(#base${id})"/>
-    <rect x="40" y="262" width="120" height="5" rx="2.5" fill="${tint}" opacity=".35"/>
-    <rect x="31" y="108" width="6" height="170" rx="3" fill="#fff" opacity=".55"/>
-    <rect x="166" y="110" width="2" height="160" fill="#fff" opacity=".35"/>
-    ${label ? printed({ cx: 100, y: 146, name, sizeLabel: 'Parfum 50 ml', ink }) : ''}`;
+    body = flacon({ id, tint, cap, cx: 100, top: 46, bw: 128, bh: 186, cw: 82, ch: 46, r: 7, name, size: '50 ML', labelOn, shadow });
   }
-
-  return `<svg class="bottle" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(name)}">${defs(id, tint, cap)}<g class="bottle__g">${body}</g></svg>`;
+  return `<svg class="bottle" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(name || 'Frasco Le Sensier')}">${glassDefs(id, tint, cap)}<g class="bottle__g">${body}</g></svg>`;
 }
 
-/** Caixa rígida (frente), papel na cor da família, logotipo em relevo seco. */
-export function boxFront({ family = 'brume', name = '', line = 'autoral', sub = 'Parfum 50 ml' } = {}) {
+/** Caixa: papel da família, texto preto alinhado à esquerda como a etiqueta. */
+export function boxFront({ family = 'brume', name = '', line = 'autoral', sub = '50 ML' } = {}) {
   const f = families[family] || families.brume;
-  const id = ++uid;
-  const p = f.paper;
-  const lines = wrap(name, 16);
+  const lines = wrap(name.toUpperCase(), 14);
   return `<svg class="box" viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Caixa ${esc(name)}">
-    <defs>
-      <linearGradient id="bx${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${shade(p, 0.03)}"/><stop offset="1" stop-color="${shade(p, -0.04)}"/></linearGradient>
-    </defs>
-    <rect width="200" height="280" fill="url(#bx${id})"/>
-    <rect x="0" y="0" width="200" height="280" fill="none" stroke="#141311" stroke-opacity=".08"/>
-    <g text-anchor="middle">
-      <text x="100.6" y="61" font-family="'Bodoni Moda', serif" font-size="15" letter-spacing="4" fill="#fff" opacity=".7">LE SENSIER</text>
-      <text x="100" y="60" font-family="'Bodoni Moda', serif" font-size="15" letter-spacing="4" fill="${shade(p, -0.09)}">LE SENSIER</text>
-      ${lines.map((l, i) => `<text x="100" y="${206 + i * 15}" font-family="'Bodoni Moda', serif" font-size="12" fill="#141311">${esc(l)}</text>`).join('')}
-      <text x="100" y="${206 + lines.length * 15 + 12}" font-family="Geist, sans-serif" font-size="5.6" letter-spacing="1.8" fill="#141311" opacity=".6">${esc(sub.toUpperCase())}</text>
+    <rect width="200" height="280" fill="${f.paper}"/>
+    <rect width="200" height="280" fill="none" stroke="#111" stroke-opacity=".08"/>
+    <g fill="#111" font-family="${SANS}">
+      <text x="20" y="34" font-family="${MONO}" font-size="7" letter-spacing=".6">LE SENSIER</text>
+      <text x="180" y="34" font-family="${MONO}" font-size="7" letter-spacing=".6" text-anchor="end">${line === 'autoral' ? 'AUTORAL' : 'RELEITURA'}</text>
+      ${lines.map((l, i) => `<text x="20" y="${214 + i * 15}" font-size="13" font-weight="500">${esc(l)}</text>`).join('')}
+      <text x="20" y="262" font-family="${MONO}" font-size="7" letter-spacing=".6">PARFUM</text>
+      <text x="180" y="262" font-family="${MONO}" font-size="7" letter-spacing=".6" text-anchor="end">${esc(sub)}</text>
     </g>
-    <rect x="96" y="250" width="8" height="8" fill="${(caps[line] || caps.autoral).mid}"/>
   </svg>`;
 }

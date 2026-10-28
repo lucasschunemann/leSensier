@@ -9,22 +9,20 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Geist:wght@300;400;500&display=swap" rel="stylesheet" />
-  <script>try{if(sessionStorage.getItem('ls-nav')==='1')document.documentElement.classList.add('is-entering')}catch(e){}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/styles/main.css" />
 </head>
 <body class="page-colecao">
   <main>
-    <section class="page-top wrap">
-      <div class="page-top__row">
-        <h1 data-split>Coleção</h1>
-        <p data-reveal>Perfumes de 50 ml, miniaturas de 5 ml, colônias de 200 ml, kits para experimentar e polpas para o corpo.</p>
+    <section class="shop shop--page wrap" aria-labelledby="shop-title">
+      <header class="shop__head">
+        <h1 id="shop-title" data-title>Perfumes</h1>
+        <p class="shop__count" data-count></p>
+      </header>
+      <div class="shop__bar">
+        <div class="chips" data-filters role="toolbar" aria-label="Filtrar"></div>
+        <label class="shop__q"><span class="sr">Buscar</span><input type="search" data-q placeholder="Buscar nota ou nome" autocomplete="off" /></label>
       </div>
-    </section>
-    <div class="filters">
-      <div class="filters__in wrap" role="toolbar" aria-label="Filtrar coleção"></div>
-    </div>
-    <section class="wrap">
       <div class="grid" data-grid aria-live="polite"></div>
     </section>
   </main>

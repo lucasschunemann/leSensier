@@ -4,17 +4,17 @@ Rebranding e novo site da Le Sensier, perfumaria brasileira com criações autor
 
 ## Páginas
 
-- `/` palco 3D com o frasco em vidro (Three.js) passando pelas sete famílias, origem da marca, linha Linge, Brume de Bain, caixa que abre com a rolagem e kits.
-- `/colecao.html` todas as fragrâncias, kits e polpas, com filtros por linha e família.
+- `/` frasco 3D (Three.js) que troca de família, e logo abaixo a grade com todos os perfumes, filtros e busca.
+- `/colecao.html` todas as fragrâncias, kits e polpas, com filtros por linha, família e formato.
 - `/produto.html?p=<slug>` página de produto com tamanhos, notas, intensidade e sacola.
 - `/marca.html` identidade: logotipo, monograma, cores, tipografia, frascos, embalagens e tom de voz.
 
 ## Sistema
 
-- Logotipo e monograma em vetor (`public/brand/`), desenhados a partir da Bodoni Moda (opsz 96).
-- Tipografia: Bodoni Moda para nomes e títulos, Geist para texto.
+- Logotipo e monograma em vetor (`public/brand/`), desenhados a partir da Geist Medium.
+- Tipografia: Geist, com Geist Mono nas etiquetas e preços.
 - Cada família tem uma cor de líquido e uma cor de papel (`src/js/families.js`).
-- Tampa de travertino nas autorais, preta fosca nas releituras.
+- Vidro reto, tampa em bloco e etiqueta de papel. Tampa branca nas autorais, preta nas releituras.
 - Frascos e caixas são gerados em SVG (`src/js/bottle.js`), sem fotos.
 
 ## Catálogo e compra

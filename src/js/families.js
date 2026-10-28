@@ -1,60 +1,60 @@
-// Famílias olfativas. Cada uma tem uma cor de líquido (tint) e um papel de embalagem (paper).
+// Famílias olfativas. tint: cor do líquido no frasco. paper: fundo de foto e papel da caixa.
 export const families = {
-  brise: {
-    name: 'Brise',
-    state: 'Clareza',
-    text: 'Cítricos e florais leves. Perfumes para o dia, que acompanham o movimento.',
-    tint: '#E6DCA4',
-    paper: '#EDE8D6',
+  linge: {
+    name: 'Linge',
+    state: 'Roupa limpa',
+    text: 'Seis leituras do tecido: lavado, passado, secando ao sol, guardado com amaciante.',
+    tint: '#ECE9EF',
+    paper: '#ECEBE8',
   },
   brume: {
     name: 'Brume',
     state: 'Banho e pele',
     text: 'O cheiro de banho tomado. Fragrâncias que ficam perto da pele.',
-    tint: '#C3D0D3',
-    paper: '#E1E5E3',
-  },
-  linge: {
-    name: 'Linge',
-    state: 'Roupa limpa',
-    text: 'Seis leituras do tecido: lavado, passado, secando ao sol, guardado com amaciante.',
-    tint: '#E4E2EA',
-    paper: '#ECEAE6',
+    tint: '#E3EAEA',
+    paper: '#E7EAE9',
   },
   sorbet: {
     name: 'Sorbet',
     state: 'Mar e céu nublado',
     text: 'Começa gelado e derrete na pele. Skinscents nascidos em dias calmos de praia.',
-    tint: '#B9D3C9',
-    paper: '#DFE8E3',
+    tint: '#DCEAE2',
+    paper: '#E6EBE7',
+  },
+  brise: {
+    name: 'Brise',
+    state: 'Clareza',
+    text: 'Cítricos e florais leves. Perfumes para o dia.',
+    tint: '#F1EBC9',
+    paper: '#EEECE4',
   },
   souffle: {
     name: 'Soufflé',
     state: 'Madeira e textura',
     text: 'Amadeirados cremosos, de rastro seco. Sândalo, papiro, matcha.',
-    tint: '#B28A5C',
-    paper: '#E0D6C7',
+    tint: '#E2CDA8',
+    paper: '#EBE7E0',
   },
   douceur: {
     name: 'Douceur',
     state: 'Doçura',
     text: 'Florais e frutados intensos. Lichia, rosa, flores brancas e baunilha.',
-    tint: '#DFADA6',
-    paper: '#EDDDD8',
+    tint: '#F0D9D3',
+    paper: '#EEE8E5',
   },
   the: {
     name: 'Thé',
     state: 'Chá ao fim da tarde',
     text: 'Quatro miniaturas inspiradas nos rituais de chá japoneses.',
-    tint: '#C6A266',
-    paper: '#E8DDC9',
+    tint: '#E6D3A6',
+    paper: '#ECE8DF',
   },
 };
 
 export const familyOrder = ['linge', 'brume', 'sorbet', 'brise', 'souffle', 'douceur', 'the'];
 
-// Tampas: pedra (travertino) nas criações autorais, tinta (preto fosco) nas releituras.
+// Tampa em bloco: branca nas criações autorais, preta nas releituras.
 export const caps = {
-  autoral: { name: 'Travertino', top: '#E3DACB', mid: '#CFC4B2', low: '#B4A893' },
-  releitura: { name: 'Preto fosco', top: '#3A3732', mid: '#1C1A17', low: '#0E0D0B' },
+  autoral: { name: 'Branca', top: '#FBFAF7', mid: '#EFEDE8', low: '#DCD9D2', ink: '#111111' },
+  releitura: { name: 'Preta', top: '#3A3936', mid: '#1B1A19', low: '#0D0D0C', ink: '#F4F3F0' },
 };
