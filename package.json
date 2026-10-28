@@ -1,0 +1,28 @@
+{
+  "name": "lesensier",
+  "version": "1.0.0",
+  "description": "Le Sensier: rebranding e site",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasschunemann/leSensier.git"
+  },
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/lucasschunemann/leSensier/issues"
+  },
+  "homepage": "https://github.com/lucasschunemann/leSensier#readme",
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.27",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  },
+  "private": true
+}

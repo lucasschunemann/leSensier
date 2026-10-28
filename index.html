@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Le Sensier · Perfumaria brasileira</title>
+  <meta name="description" content="Le Sensier: perfumaria brasileira com criações autorais e releituras. Linge, Brume, Sorbet, Brise, Soufflé, Douceur e Thé." />
+  <meta name="theme-color" content="#F3F0EA" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Geist:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script>try{if(sessionStorage.getItem('ls-nav')==='1')document.documentElement.classList.add('is-entering')}catch(e){}</script>
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body class="home">
+  <main>
+    <section class="stage" id="topo" aria-label="Le Sensier e suas famílias">
+      <div class="stage__sticky">
+        <canvas class="stage__gl" aria-hidden="true"></canvas>
+        <div class="stage__fallback" aria-hidden="true"></div>
+
+        <div class="stage__panel is-active" data-state="0">
+          <h1 class="stage__lede">Perfumaria brasileira. Criações autorais e releituras de perfumes conhecidos.</h1>
+          <p class="stage__cue"><span class="stage__cue-line"></span>Role para ver as sete famílias</p>
+        </div>
+        <!-- painéis das famílias são gerados em home.js -->
+
+        <nav class="stage__index" aria-label="Famílias"></nav>
+      </div>
+      <div id="familias" class="stage__anchor"></div>
+    </section>
+
+    <section class="origin" id="origem">
+      <div class="wrap">
+        <p class="origin__text" data-words>A Le Sensier começou fazendo releituras de perfumes que muita gente já ama. Com o tempo, passou a criar as próprias fragrâncias. Hoje as duas convivem na mesma casa, e o frasco mostra a diferença.</p>
+        <div class="origin__pair">
+          <figure data-reveal>
+            <div class="origin__bottle" data-bottle='{"family":"linge","line":"autoral","name":"Linge Lave"}'></div>
+            <figcaption><strong>Autoral</strong>Tampa em travertino. Linge, Brume, Sorbet e Thé.</figcaption>
+          </figure>
+          <figure data-reveal=".12">
+            <div class="origin__bottle" data-bottle='{"family":"souffle","line":"releitura","name":"Soufflé de Santal"}'></div>
+            <figcaption><strong>Releitura</strong>Tampa preta fosca. Brise, Soufflé e Douceur.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="rail" id="linge" aria-labelledby="rail-title">
+      <div class="rail__pin">
+        <header class="rail__head wrap">
+          <h2 id="rail-title" data-split>Linge</h2>
+          <p data-reveal>Seis fragrâncias sobre roupa limpa. Do tecido recém-lavado ao tricô num dia frio.</p>
+        </header>
+        <div class="rail__track" data-rail></div>
+      </div>
+    </section>
+
+    <section class="bain" aria-labelledby="bain-title">
+      <div class="wrap bain__grid">
+        <div class="bain__copy">
+          <p class="label">A mais vendida da casa</p>
+          <h2 id="bain-title" data-split>Brume de Bain</h2>
+          <p data-reveal>Bergamota, grapefruit e lima sobre cardamomo, lavandin, patchouli e vetiver. O cheiro de banho tomado, em três formatos.</p>
+          <ul class="bain__list" data-stagger></ul>
+        </div>
+        <div class="bain__trio" aria-hidden="true">
+          <div class="bain__b bain__b--200" data-bottle='{"family":"brume","line":"autoral","name":"Brume de Bain","format":"200"}'></div>
+          <div class="bain__b bain__b--50" data-bottle='{"family":"brume","line":"autoral","name":"Brume de Bain","format":"50"}'></div>
+          <div class="bain__b bain__b--jar" data-bottle='{"family":"brume","line":"autoral","name":"Brume de Bain","format":"jar"}'></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="unbox" id="embalagem" aria-labelledby="unbox-title">
+      <div class="unbox__pin">
+        <div class="unbox__scene" aria-hidden="true">
+          <div class="unbox__bottle" data-bottle='{"family":"sorbet","line":"autoral","name":"Sorbet Melon"}'></div>
+          <div class="cube cube--base"></div>
+          <div class="cube cube--lid"></div>
+        </div>
+        <div class="unbox__copy wrap">
+          <h2 id="unbox-title" data-split>Caixa e frasco</h2>
+          <p data-reveal>Caixa rígida em papel sem revestimento, na cor de cada família. O logotipo entra em relevo seco, sem tinta. Por dentro, o frasco de vidro grosso com base pesada.</p>
+          <a class="link" href="/marca.html#embalagem">Ver o sistema de embalagens</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="kits" id="kits" aria-labelledby="kits-title">
+      <div class="wrap">
+        <header class="kits__head">
+          <h2 id="kits-title" data-split>Para experimentar</h2>
+          <p data-reveal>Miniaturas de 5 ml para sentir na pele antes de escolher o frasco grande.</p>
+        </header>
+        <ul class="kits__list" data-kits></ul>
+      </div>
+      <div class="kits__float" aria-hidden="true"></div>
+    </section>
+
+    <section class="closing">
+      <a class="closing__link" href="/colecao.html" data-cursor="Abrir">
+        <span class="closing__small">21 fragrâncias, kits e corpo</span>
+        <span class="closing__big">Ver a coleção</span>
+      </a>
+    </section>
+  </main>
+  <script type="module" src="/src/js/pages/home.js"></script>
+</body>
+</html>
